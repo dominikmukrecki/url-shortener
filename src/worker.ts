@@ -1,4 +1,5 @@
 import { Router } from 'itty-router';
+import { fetchOriginalURLWithSDK } from './directus';
 
 // Create a new router
 const router = Router();
@@ -27,7 +28,7 @@ async function fetchOriginalURL(slug: string): Promise<string | null> {
 }
 
 router.get('/:slug', async ({ params }: { params: { slug: string } }) => {
-    const originalURL: string | null = await fetchOriginalURL(params.slug);
+    const originalURL: string | null = await fetchOriginalURLWithSDK(params.slug);
     if (originalURL) {
         return new Response('', { status: 302, headers: { 'Location': originalURL } });
     } else {
