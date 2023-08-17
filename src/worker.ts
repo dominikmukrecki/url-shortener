@@ -1,32 +1,42 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Router } from 'itty-router';
 
-export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-	//
-	// Example binding to a Queue. Learn more at https://developers.cloudflare.com/queues/javascript-apis/
-	// MY_QUEUE: Queue;
+// Create a new router
+const router = Router();
+
+// Retrieve from environment variables
+const DIRECTUS_ENDPOINT: string = DIRECTUS_ENDPOINT_BINDING;
+const DIRECTUS_AUTH_TOKEN: string = DIRECTUS_AUTH_TOKEN_BINDING;
+const CF_ACCESS_CLIENT_ID: string = CF_ACCESS_CLIENT_ID_BINDING;
+const CF_ACCESS_CLIENT_SECRET: string = CF_ACCESS_CLIENT_SECRET_BINDING;
+
+/**
+ * Fetch the original URL from Directus based on the slug.
+ * @param slug The slug from the shortened URL.
+ * @returns The original URL if found, null otherwise.
+ */
+async function fetchOriginalURL(slug: string): Promise<string | null> {
+    const response: Response = await fetch(`${DIRECTUS_ENDPOINT}?filter[slug][_eq]=${slug}&limit=1`, {
+        headers: {
+            'Authorization': `Bearer ${DIRECTUS_AUTH_TOKEN}`,
+            'CF-Access-Client-Id': CF_ACCESS_CLIENT_ID,
+            'CF-Access-Client-Secret': CF_ACCESS_CLIENT_SECRET
+        }
+    });
+    const data: any = await response.json();
+    return data.data && data.data[0] ? data.data[0].original_url : null;
 }
 
+router.get('/:slug', async ({ params }: { params: { slug: string } }) => {
+    const originalURL: string | null = await fetchOriginalURL(params.slug);
+    if (originalURL) {
+        return new Response('', { status: 302, headers: { 'Location': originalURL } });
+    } else {
+        return new Response("URL not found", { status: 404 });
+    }
+});
+
+router.all('*', () => new Response('404, not found!', { status: 404 }));
+
 export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		return new Response('Hello World!');
-	},
+    fetch: router.handle,
 };
