@@ -5,8 +5,17 @@ compatibility_date = "2023-08-14"
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
 # Note: Use secrets to store sensitive data.
 # Docs: https://developers.cloudflare.com/workers/platform/environment-variables
-# [vars]
+[vars]
 # MY_VARIABLE = "production_value"
+
+# Cloudflare Access Variables
+CLOUDFLARE_ACCESS_CLIENT_ID="ef8d3d1eab024e8d46a3125e329d8da4.access"
+CLOUDFLARE_ACCESS_CLIENT_SECRET="a0297d1199a9d1dd071221b35a6f15356911c4ad893d16b130bb76acadb71ddb"
+
+# Directus Configuration Variables
+DIRECTUS_API_TOKEN="dbmcIqJm18XCT3w4z8vuLH_OhtOEHbco"
+DIRECTUS_API_LINKS_ENDPOINT="https://crm.mends.eu/items/links"
+DIRECTUS_API_LINK_ENTRIES_ENDPOINT="https://crm.mends.eu/items/link_entries"
 
 # Bind a KV Namespace. Use KV as persistent storage for small key-value pairs.
 # Docs: https://developers.cloudflare.com/workers/runtime-apis/kv
