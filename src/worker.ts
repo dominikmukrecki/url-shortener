@@ -1,5 +1,4 @@
 import { Router } from 'itty-router';
-import { getErrorContent } from './error';
 
 const router = Router();
 
@@ -9,6 +8,7 @@ interface Env {
     DIRECTUS_API_TOKEN: string;
     CLOUDFLARE_ACCESS_CLIENT_ID: string;
     CLOUDFLARE_ACCESS_CLIENT_SECRET: string;
+    FALLBACK_PROXY_URL: string; // Added this to the Env interface
 }
 
 function getAuthHeaders(env: Env): HeadersInit {
@@ -45,29 +45,42 @@ async function logLinkEntry(slug: string, query: URLSearchParams, request: Reque
     });
 }
 
+let preloadedContent: Response | null = null;
+
+async function preloadProxyContent(env: Env) {
+    const response = await fetch(env.FALLBACK_PROXY_URL);
+    preloadedContent = response.clone();
+}
+
+async function proxyErrorContent(env: Env): Promise<Response> {
+    if (preloadedContent) {
+        return preloadedContent.clone();
+    }
+    return await fetch(env.FALLBACK_PROXY_URL);
+}
+
 router.get('/:slug', async (request: Request, env: Env) => {
     try {
         const { slug } = request.params as { slug: string };
         const originalURL: string | null = await fetchOriginalURL(slug, env);
         if (originalURL) {
-            Promise.all([
-                logLinkEntry(slug, new URL(request.url).searchParams, request, env),
-                new Response('', { status: 302, headers: { 'Location': originalURL } })
-            ]);
+            await logLinkEntry(slug, new URL(request.url).searchParams, request, env);
             return new Response('', { status: 302, headers: { 'Location': originalURL } });
         } else {
-            return new Response(getErrorContent(), { status: 404, headers: { 'Content-Type': 'text/html' } });
+            return await proxyErrorContent(env);
         }
     } catch (error) {
-        // In case of any error, redirect to the error content
-        return new Response(getErrorContent(), { status: 500, headers: { 'Content-Type': 'text/html' } });
+        // In case of any error, proxy the content from the fallback URL
+        return await proxyErrorContent(env);
     }
 });
 
-router.all('*', () => new Response(getErrorContent(), { status: 404, headers: { 'Content-Type': 'text/html' } }));
+router.all('*', async (env: Env) => await proxyErrorContent(env));
 
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
+        // Preload the content asynchronously
+        preloadProxyContent(env);
         return router.handle(request, env);
     }
 };
