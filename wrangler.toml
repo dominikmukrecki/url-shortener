@@ -11,7 +11,8 @@ compatibility_date = "2023-08-14"
 # Directus Configuration Variables
 DIRECTUS_API_LINKS_ENDPOINT="https://crm.mends.eu/items/links"
 DIRECTUS_API_LINK_ENTRIES_ENDPOINT="https://crm.mends.eu/items/link_entries"
-FALLBACK_PROXY_URL="https://example.com"
+DIRECTUS_API_ERROR_ENTRIES_ENDPOINT="https://crm.mends.eu/items/error_entries"
+EMBEDDED_FALLBACK_URL="https://error-pages-43f.pages.dev/404"
 
 # Bind a KV Namespace. Use KV as persistent storage for small key-value pairs.
 # Docs: https://developers.cloudflare.com/workers/runtime-apis/kv
