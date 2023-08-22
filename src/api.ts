@@ -1,43 +1,52 @@
 import { Env } from './config';
 import { getAuthHeaders } from './auth';
 
-export async function fetchOriginalURL(slug: string, env: Env): Promise<{ original_url: string | null, id: string | null, headers: { key: string, value: string }[], query: { key: string, value: string }[] }> {
+export async function fetchOriginalURL(slug: string, env: Env): Promise<{ original_url: string | null, id: string | null, headers: any, query: any, status: string }> {
     try {
         const response: Response = await fetch(`${env.DIRECTUS_API_LINKS_ENDPOINT}?filter[slug][_eq]=${slug}&limit=1`, {
             headers: getAuthHeaders(env)
         });
         if (!response.ok) {
-            throw new Error(`Failed to fetch original URL. Status: ${response.status}`);
+            return {
+                original_url: null,
+                id: null,
+                headers: {},
+                query: {},
+                status: "ERROR_FETCH_FAILED" // More descriptive status for a failed fetch
+            };
         }
         const data = await response.json();
 
         return {
             original_url: data.data && data.data[0] ? data.data[0].original_url : null,
             id: data.data && data.data[0] ? data.data[0].id : null,
-            headers: data.data && data.data[0] ? data.data[0].headers : [],
-            query: data.data && data.data[0] ? data.data[0].query : []            
-            };
+            headers: data.data && data.data[0] ? data.data[0].headers : {},
+            query: data.data && data.data[0] ? data.data[0].query : {},
+            status: "SUCCESS"
+        };
     } catch (error) {
         console.error(`Error fetching original URL for slug ${slug}:`, error);
         return {
             original_url: null,
             id: null,
-            headers: [],
-            query: []
+            headers: {},
+            query: {},
+            status: "ERROR_LINK_NOT_FOUND" // More descriptive status for a link that doesn't exist
         };
     }
 }
 
-
-export async function logLinkEntry(id: string, query: URLSearchParams, headersArray: { key: string, value: string }[], request: Request, env: Env) {
+export async function logLinkEntry(id: string | null, query: URLSearchParams, headers: any, request: Request, env: Env, status: string) {
     const domain = new URL(request.url).hostname;
-    const queryArray = Array.from(query.entries()).map(([key, value]) => ({ key, value }));
+    const path = new URL(request.url).pathname; // Extracting the path from the request URL
     
     const eventData = {
-        query: JSON.stringify(queryArray),
-        headers: JSON.stringify(headersArray), // Log headers as a JSON string
+        query: JSON.stringify(query),
+        headers: JSON.stringify(headers),
         link: id,
-        domain: domain
+        domain: domain,
+        path: path,
+        status: status
     };
 
     await fetch(env.DIRECTUS_API_LINK_ENTRIES_ENDPOINT, {
@@ -46,23 +55,3 @@ export async function logLinkEntry(id: string, query: URLSearchParams, headersAr
         body: JSON.stringify(eventData)
     });
 }
-
-export async function logErrorEntry(url: string, query: URLSearchParams, headersArray: { key: string, value: string }[], env: Env) {
-    const domain = new URL(url).hostname;
-    const path = new URL(url).pathname; // Extracting just the path from the URL
-    const queryArray = Array.from(query.entries()).map(([key, value]) => ({ key, value }));
-    
-    const errorData = {
-        path: path, //empty path error not logged
-        query: JSON.stringify(queryArray),
-        headers: JSON.stringify(headersArray),
-        domain: domain
-    };
-
-    await fetch(env.DIRECTUS_API_ERROR_ENTRIES_ENDPOINT, {
-        method: 'POST',
-        headers: getAuthHeaders(env),
-        body: JSON.stringify(errorData)
-    });
-}
-
