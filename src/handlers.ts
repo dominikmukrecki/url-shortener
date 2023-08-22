@@ -10,9 +10,9 @@ export async function handleSlugRoute(request: Request, env: Env): Promise<Respo
         
         const searchParams = new URL(request.url).searchParams;
         
-        const fetchedQueryString = new URLSearchParams(fetchedQuery).toString();
-        const existingQueryString = searchParams.toString();
-        const mergedQueryString = existingQueryString ? existingQueryString + '&' + fetchedQueryString : fetchedQueryString;
+        // Merge the query parameters
+        const mergedQuery = { ...fetchedQuery, ...Object.fromEntries(searchParams) };
+        const mergedQueryString = new URLSearchParams(mergedQuery).toString();
         const mergedUrl = original_url + (mergedQueryString ? '?' + mergedQueryString : '');
 
         if (original_url && id) {
