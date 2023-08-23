@@ -54,3 +54,6 @@ EMBEDDED_FALLBACK_URL="https://error-pages-43f.pages.dev/404"
 # [[migrations]]
 # tag = "v1"
 # new_classes = ["MyDurableObject"]
+
+[placement]
+mode = "smart"
