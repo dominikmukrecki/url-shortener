@@ -3,9 +3,8 @@
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": true,
     "module": "es6",
-    "target": "es5",
-    "allowJs": true,
-    "lib": ["es6", "dom"]
+    "target": "es6",
+    "allowJs": true
   },
   "files": ["src/worker.ts"]
 }
