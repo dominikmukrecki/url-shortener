@@ -29,7 +29,3 @@ export function mergeQueryParams(originalUrl: string, requestQuery: string): str
 
     return originalUrlObj.toString();
 }
-
-export function arrayToQueryString(queryArray) {
-    return queryArray.map(({ key, value }) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
-}
