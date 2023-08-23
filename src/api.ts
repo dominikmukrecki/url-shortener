@@ -43,16 +43,17 @@ export function logLinkEntry(
     const requestUrlObj = new URL(request.url);
     let responseHeaders = {};
     let responseLocation = null;
-    let responseUrlObj = null;
+    let responseUrlObj: URL | null = null; // Explicitly type the variable
 
     if (response) {
         responseHeaders = Object.fromEntries(response.headers.entries());
         responseLocation = responseHeaders['location'] || null;
 
-        try {
+        if (responseLocation) try {
             responseUrlObj = new URL(responseLocation);
         } catch (error) {
             console.error("Invalid response location:", responseLocation);
+            responseUrlObj = null;
         }
     }
 
