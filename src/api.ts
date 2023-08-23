@@ -1,7 +1,7 @@
 import { Env } from './config';
 import { getAuthHeaders } from './auth';
 
-export async function fetchOriginalURL(slug: string, env: Env): Promise<{ original_url: string | null, id: string | null, headers: any, query: any, status: string }> {
+export async function fetchOriginalURL(slug: string, env: Env): Promise<{ original_url: string | null, id: string | null, request_headers: any, request_query: any }> {
     try {
         const response: Response = await fetch(`${env.DIRECTUS_API_LINKS_ENDPOINT}?filter[slug][_eq]=${slug}&limit=1`, {
             headers: getAuthHeaders(env)
@@ -10,9 +10,8 @@ export async function fetchOriginalURL(slug: string, env: Env): Promise<{ origin
             return {
                 original_url: null,
                 id: null,
-                headers: {},
-                query: {},
-                status: "ERROR_FETCH_FAILED" // More descriptive status for a failed fetch
+                request_headers: {},
+                request_query: {},
             };
         }
         const data = await response.json();
@@ -20,36 +19,57 @@ export async function fetchOriginalURL(slug: string, env: Env): Promise<{ origin
         return {
             original_url: data.data && data.data[0] ? data.data[0].original_url : null,
             id: data.data && data.data[0] ? data.data[0].id : null,
-            headers: data.data && data.data[0] ? data.data[0].headers : {},
-            query: data.data && data.data[0] ? data.data[0].query : {},
-            status: "SUCCESS"
+            request_headers: data.data && data.data[0] ? data.data[0].request_headers : {},
+            request_query: data.data && data.data[0] ? data.data[0].request_query : {},
         };
     } catch (error) {
         console.error(`Error fetching original URL for slug ${slug}:`, error);
         return {
             original_url: null,
             id: null,
-            headers: {},
-            query: {},
-            status: "ERROR_LINK_NOT_FOUND" // More descriptive status for a link that doesn't exist
+            request_headers: {},
+            request_query: {},
         };
     }
 }
 
-export async function logLinkEntry(id: string | null, query: URLSearchParams, headers: any, request: Request, env: Env, status: string) {
-    const domain = new URL(request.url).hostname;
-    const path = new URL(request.url).pathname; // Extracting the path from the request URL
-    
+export function logLinkEntry(
+    id: string | null,
+    request: Request,
+    response: Response | null,
+    env: Env,
+    status: string
+) {
+    const requestUrlObj = new URL(request.url);
+    let responseHeaders = {};
+    let responseLocation = null;
+    let responseUrlObj = null;
+
+    if (response) {
+        responseHeaders = Object.fromEntries(response.headers.entries());
+        responseLocation = responseHeaders['location'] || null;
+
+        try {
+            responseUrlObj = new URL(responseLocation);
+        } catch (error) {
+            console.error("Invalid response location:", responseLocation);
+        }
+    }
+
     const eventData = {
-        query: JSON.stringify(query),
-        headers: JSON.stringify(headers),
         link: id,
-        domain: domain,
-        path: path,
-        status: status
+        status: status,
+        request_headers: Object.fromEntries(request.headers.entries()),
+        request_url: request.url,
+        request_domain: requestUrlObj.hostname,
+        request_path: requestUrlObj.pathname,
+        response_headers: responseHeaders,
+        response_url: responseLocation,
+        response_query: responseUrlObj ? Object.fromEntries(responseUrlObj.searchParams.entries()) : {},
+        request_query: Object.fromEntries(requestUrlObj.searchParams.entries())
     };
 
-    await fetch(env.DIRECTUS_API_LINK_ENTRIES_ENDPOINT, {
+    fetch(env.DIRECTUS_API_LINK_ENTRIES_ENDPOINT, {
         method: 'POST',
         headers: getAuthHeaders(env),
         body: JSON.stringify(eventData)

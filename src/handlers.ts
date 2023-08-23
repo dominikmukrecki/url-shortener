@@ -6,36 +6,44 @@ import { iframeEmbedContent } from './utils';
 export async function handleSlugRoute(request: Request, env: Env): Promise<Response> {
     try {
         const { slug } = request.params as { slug: string };
-        const { original_url, id, headers: fetchedHeaders, query: fetchedQuery, status } = await fetchOriginalURL(slug, env);
-        
-        const searchParams = new URL(request.url).searchParams;
-        
-        // Merge the query parameters
-        const mergedQuery = { ...fetchedQuery, ...Object.fromEntries(searchParams) };
-        const mergedQueryString = new URLSearchParams(mergedQuery).toString();
-        const mergedUrl = original_url + (mergedQueryString ? '?' + mergedQueryString : '');
-
-        if (original_url && id) {
-            await logLinkEntry(id, searchParams, request.headers, request, env, status);
+        const { original_url, id, request_headers: fetchedHeaders, request_query: fetchedQuery } = await fetchOriginalURL(slug, env);
+            if (original_url && id) {
+            const searchParams = new URL(request.url).searchParams;
+            const originalUrlObj = new URL(original_url);
             
-            const responseHeaders = {
+            // Merge the query parameters
+            const mergedQuery = {
+                ...Object.fromEntries(originalUrlObj.searchParams),
+                ...fetchedQuery,
+                ...Object.fromEntries(searchParams)
+            };
+            const mergedQueryString = new URLSearchParams(mergedQuery).toString();
+            const baseUrl = original_url.split('?')[0];  // Extract base URL without query parameters
+            const mergedUrl = baseUrl + (mergedQueryString ? '?' + mergedQueryString : '');
+
+            // Merge the headers
+            const mergedHeaders = {
+                ...Object.fromEntries(request.headers.entries()),
                 ...fetchedHeaders,
                 'Location': mergedUrl
             };
 
-            return new Response('', { status: 302, headers: responseHeaders });
+        
+            const responseToRedirect = new Response('', { status: 302, headers: mergedHeaders });
+            logLinkEntry(id, request, responseToRedirect, env, "REDIRECT_INITIATED");
+            return responseToRedirect;
         } else {
-            await logLinkEntry(null, searchParams, request.headers, request, env, "ERROR_LINK_NOT_FOUND");
+            logLinkEntry(null, request, null, env, "ERROR_LINK_NOT_FOUND");
             return iframeEmbedContent(env);
         }
     } catch (error) {
         console.error("Error in handleSlugRoute:", error.message);
-        await logLinkEntry(null, new URL(request.url).searchParams, request.headers, request, env, "ERROR_IN_ROUTE_HANDLER");
+        logLinkEntry(null, request, null, env, "ERROR_IN_ROUTE_HANDLER");
         return iframeEmbedContent(env);
     }
 }
 
 export async function handleFallbackRoute(request: Request, env: Env): Promise<Response> {
-    await logLinkEntry(null, new URL(request.url).searchParams, request.headers, request, env, "ERROR_IN_FALLBACK");
+    await logLinkEntry(null, request, null, env, "ERROR_IN_FALLBACK");
     return iframeEmbedContent(env);
 }
