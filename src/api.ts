@@ -41,13 +41,13 @@ export function logLinkEntry(
     status: string
 ) {
     const requestUrlObj = new URL(request.url);
-    let responseHeaders = {};
+    let responseHeaders: ResponseHeaders = {};
     let responseLocation = null;
     let responseUrlObj: URL | null = null; // Explicitly type the variable
 
     if (response) {
         responseHeaders = Object.fromEntries(response.headers.entries());
-        responseLocation = responseHeaders['location'] || null;
+        responseLocation = responseHeaders?.['location'] || null;
 
         if (responseLocation) try {
             responseUrlObj = new URL(responseLocation);
