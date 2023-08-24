@@ -5,7 +5,9 @@
     "module": "es6",
     "target": "es6",
     "allowJs": true,
-    "moduleResolution": "node"
+    "lib": ["es5", "es6", "es2019", "dom"],
+    "moduleResolution": "node",
+    "types": ["@cloudflare/workers-types"]
   },
-  "files": ["src/worker.ts"]
+  "files": ["src/worker.ts", "src/global.d.ts"]
 }
