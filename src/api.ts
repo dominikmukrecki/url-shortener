@@ -48,7 +48,7 @@ type ResponseHeaders = {
     [key: string]: string;
 };
 
-export function logLinkEntry(
+export async function logLinkEntry(
     id: string | null,
     request: Request,
     response: Response | null,
@@ -86,7 +86,7 @@ export function logLinkEntry(
         request_cf: request.cf,
     };
 
-    fetch(env.DIRECTUS_API_LINK_ENTRIES_ENDPOINT, { // seems like body is missing
+    fetch(env.DIRECTUS_API_LINK_ENTRIES_ENDPOINT, {
         method: 'POST',
         headers: getAuthHeaders(env),
         body: JSON.stringify(eventData)

@@ -32,15 +32,15 @@ export async function handleSlugRoute(request: Request, env: Env): Promise<Respo
             };
 
             const responseToRedirect = new Response('', { status: 302, headers: mergedHeaders });
-            logLinkEntry(id, request, responseToRedirect, env, "REDIRECT_INITIATED");
+            await logLinkEntry(id, request, responseToRedirect, env, "REDIRECT_INITIATED");
             return responseToRedirect;
         } else {
-            logLinkEntry(null, request, null, env, "ERROR_LINK_NOT_FOUND");
+            await logLinkEntry(null, request, null, env, "ERROR_LINK_NOT_FOUND");
             return iframeEmbedContent(env);
         }
     } catch (error) {
         console.error("Error in handleSlugRoute:", error.message);
-        logLinkEntry(null, request, null, env, "ERROR_IN_ROUTE_HANDLER");
+        await logLinkEntry(null, request, null, env, "ERROR_IN_ROUTE_HANDLER");
         return iframeEmbedContent(env);
     }
 }
