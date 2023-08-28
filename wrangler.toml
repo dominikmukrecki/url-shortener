@@ -57,3 +57,7 @@ EMBEDDED_FALLBACK_URL="https://error-pages-43f.pages.dev/404"
 
 [placement]
 mode = "smart"
+
+[env.staging]
+workers_dev = true
+vars = { DIRECTUS_API_LINKS_ENDPOINT="https://crm.mends.eu/items/links", DIRECTUS_API_LINK_ENTRIES_ENDPOINT="https://crm.mends.eu/items/link_entries", EMBEDDED_FALLBACK_URL="https://error-pages-43f.pages.dev/404"}

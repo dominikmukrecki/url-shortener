@@ -1,5 +1,6 @@
 import { Env } from './config';
 import { getAuthHeaders } from './auth';
+import { Request } from '@cloudflare/workers-types'; // Importing Response
 
 interface DirectusResponse {
     data: {
@@ -13,8 +14,8 @@ interface DirectusResponse {
 export async function fetchOriginalURL(slug: string, env: Env): Promise<{ original_url: string | null, id: string | null, request_headers: any, request_query: any }> {
     try {
         const response: Response = await fetch(`${env.DIRECTUS_API_LINKS_ENDPOINT}?filter[slug][_eq]=${slug}&limit=1`, {
-            headers: getAuthHeaders(env)
-        });
+            headers: getAuthHeaders(env),
+        }) as unknown as Response;
         if (!response.ok) {
             return {
                 original_url: null,
@@ -42,6 +43,10 @@ export async function fetchOriginalURL(slug: string, env: Env): Promise<{ origin
         };
     }
 }
+
+type ResponseHeaders = {
+    [key: string]: string;
+};
 
 export function logLinkEntry(
     id: string | null,
@@ -77,10 +82,11 @@ export function logLinkEntry(
         response_headers: responseHeaders,
         response_url: responseLocation,
         response_query: responseUrlObj ? Object.fromEntries(responseUrlObj.searchParams.entries()) : {},
-        request_query: Object.fromEntries(requestUrlObj.searchParams.entries())
+        request_query: Object.fromEntries(requestUrlObj.searchParams.entries()),
+        request_cf: request.cf,
     };
 
-    fetch(env.DIRECTUS_API_LINK_ENTRIES_ENDPOINT, {
+    fetch(env.DIRECTUS_API_LINK_ENTRIES_ENDPOINT, { // seems like body is missing
         method: 'POST',
         headers: getAuthHeaders(env),
         body: JSON.stringify(eventData)

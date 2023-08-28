@@ -8,7 +8,4 @@ declare global {
     interface Headers {
         entries(): IterableIterator<[string, string]>;
     }
-    type ResponseHeaders = {
-        [key: string]: string;
-    };
 }

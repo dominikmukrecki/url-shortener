@@ -1,13 +1,16 @@
-import { IRequest as Request } from 'itty-router';
+// import { IRequest as Request } from 'itty-router';
 import { Env } from './config';
 import { fetchOriginalURL, logLinkEntry } from './api';
 import { iframeEmbedContent } from './utils';
+import { Request } from '@cloudflare/workers-types'; // Importing Response
 
 export async function handleSlugRoute(request: Request, env: Env): Promise<Response> {
     try {
-        const { slug } = request.params as { slug: string };
+        // Assuming you're using some kind of routing library that attaches params to the Request object
+        const { slug } = (request as any).params as { slug: string }; // Cast to any to bypass type checking for this line
         const { original_url, id, request_headers: fetchedHeaders, request_query: fetchedQuery } = await fetchOriginalURL(slug, env);
-            if (original_url && id) {
+        
+        if (original_url && id) {
             const searchParams = new URL(request.url).searchParams;
             const originalUrlObj = new URL(original_url);
             
@@ -28,7 +31,6 @@ export async function handleSlugRoute(request: Request, env: Env): Promise<Respo
                 'Location': mergedUrl
             };
 
-        
             const responseToRedirect = new Response('', { status: 302, headers: mergedHeaders });
             logLinkEntry(id, request, responseToRedirect, env, "REDIRECT_INITIATED");
             return responseToRedirect;
