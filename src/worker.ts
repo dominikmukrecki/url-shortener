@@ -23,17 +23,14 @@ interface ResponseDetails {
     url: string;
 }
 
-interface LogPayload {
-    request: RequestDetails;
-    response: ResponseDetails;
-}
-
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
         let response = await router.handle(request, env);
+        const linkId = response.headers.get('X-Link-ID');
 
         // Create the payload object with comprehensive details from request and response
         const payload = {
+            link: linkId,
             request: {
                 method: request.method,
                 url: request.url,
@@ -55,10 +52,9 @@ export default {
                 // Note: Logging the entire response body might not always be ideal due to size or sensitivity.
             }
         };
-
-        // Log the payload to Directus
         await logToDirectus(payload, env);
-
+// log link to directus here
+// how to get link id from handleSlugRoute here?
         return response;
     }
 };

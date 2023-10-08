@@ -9,7 +9,7 @@ interface DirectusResponse {
         request_query: any;
     }[];
 }
-
+// i mean id from fetched url - how to log it?
 export async function fetchOriginalURL(slug: string, env: Env): Promise<{ original_url: string | null, id: string | null, request_headers: any, request_query: any }> {
     try {
         const response: Response = await fetch(`${env.DIRECTUS_API_LINKS_ENDPOINT}?filter[slug][_eq]=${slug}&limit=1`, {
@@ -44,6 +44,7 @@ export async function fetchOriginalURL(slug: string, env: Env): Promise<{ origin
 }
 
 interface LogPayload {
+    link: string | null;  // add this field for the UUID of the fetched link
     response: Record<string, unknown>;
     request: Record<string, unknown>;
 }
@@ -56,7 +57,7 @@ export async function logToDirectus(payload: LogPayload, env: Env): Promise<void
                 ...getAuthHeaders(env),
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ data: payload }) // This will result in data: { response: {...}, request: {...} }
+            body: JSON.stringify(payload)  // Flatten the payload structure here
         });
 
         if (!response.ok) {

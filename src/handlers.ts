@@ -4,7 +4,10 @@ import { fetchOriginalURL } from './api';
 import { iframeEmbedContent } from './utils';
 import { Request } from '@cloudflare/workers-types'; // Importing Response
 
-export async function handleSlugRoute(request: Request, env: Env): Promise<Response> {
+export async function handleSlugRoute(
+    request: Request,
+    env: Env
+  ): Promise<{ response: Response; linkId: string | null }> {
     try {
         // Assuming you're using some kind of routing library that attaches params to the Request object
         const { slug } = (request as any).params as { slug: string }; // Cast to any to bypass type checking for this line
@@ -31,17 +34,21 @@ export async function handleSlugRoute(request: Request, env: Env): Promise<Respo
                 'Location': mergedUrl
             };
 
-            const responseToRedirect = new Response('', { status: 302, headers: mergedHeaders });
-            return responseToRedirect;
-        } else {
-            return iframeEmbedContent(env);
+            const responseToRedirect = new Response('', {
+                status: 302,
+                headers: mergedHeaders,
+              });
+                
+              return { response: responseToRedirect, linkId: id };
+            } else {
+              return { response: iframeEmbedContent(env), linkId: null };
+            }
+          } catch (error) {
+            console.error("Error in handleSlugRoute:", error.message);
+            return { response: iframeEmbedContent(env), linkId: null };
+          }
         }
-    } catch (error) {
-        console.error("Error in handleSlugRoute:", error.message);
-        return iframeEmbedContent(env);
-    }
-}
-
+        
 export async function handleFallbackRoute(request: Request, env: Env): Promise<Response> {
     return iframeEmbedContent(env);
 }
