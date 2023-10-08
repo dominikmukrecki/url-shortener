@@ -1,6 +1,6 @@
 // import { IRequest as Request } from 'itty-router';
 import { Env } from './config';
-import { fetchOriginalURL, logLinkEntry } from './api';
+import { fetchOriginalURL } from './api';
 import { iframeEmbedContent } from './utils';
 import { Request } from '@cloudflare/workers-types'; // Importing Response
 
@@ -32,20 +32,16 @@ export async function handleSlugRoute(request: Request, env: Env): Promise<Respo
             };
 
             const responseToRedirect = new Response('', { status: 302, headers: mergedHeaders });
-            await logLinkEntry(id, request, responseToRedirect, env, "REDIRECT_INITIATED");
             return responseToRedirect;
         } else {
-            await logLinkEntry(null, request, null, env, "ERROR_LINK_NOT_FOUND");
             return iframeEmbedContent(env);
         }
     } catch (error) {
         console.error("Error in handleSlugRoute:", error.message);
-        await logLinkEntry(null, request, null, env, "ERROR_IN_ROUTE_HANDLER");
         return iframeEmbedContent(env);
     }
 }
 
 export async function handleFallbackRoute(request: Request, env: Env): Promise<Response> {
-    await logLinkEntry(null, request, null, env, "ERROR_IN_FALLBACK");
     return iframeEmbedContent(env);
 }
