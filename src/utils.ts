@@ -18,14 +18,3 @@ export function iframeEmbedContent(env: Env): Response {
 
     return new Response(htmlContent, { status: 200, headers: { 'Content-Type': 'text/html' } });
 }
-
-export function mergeQueryParams(originalUrl: string, requestQuery: string): string {
-    const originalUrlObj = new URL(originalUrl);
-    const requestUrlObj = new URL(`http://example.com${requestQuery}`); // dummy domain just to parse query
-
-    for (const [key, value] of requestUrlObj.searchParams.entries()) {
-        originalUrlObj.searchParams.set(key, value);
-    }
-
-    return originalUrlObj.toString();
-}
