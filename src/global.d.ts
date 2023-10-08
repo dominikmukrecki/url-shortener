@@ -5,7 +5,4 @@ declare global {
         [Symbol.iterator](): IterableIterator<[string, string]>;
         entries(): IterableIterator<[string, string]>;
     }
-    interface Headers {
-        entries(): IterableIterator<[string, string]>;
-    }
 }
