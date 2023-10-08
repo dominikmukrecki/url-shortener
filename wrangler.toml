@@ -10,7 +10,7 @@ compatibility_date = "2023-08-14"
 
 # Directus Configuration Variables
 DIRECTUS_API_LINKS_ENDPOINT="https://crm.mends.eu/items/links"
-DIRECTUS_API_EXTERNAL_LOGS_ENDPOINT="https://crm.mends.eu/items/external_logs"
+DIRECTUS_API_EXTERNAL_DATA_ENDPOINT="https://crm.mends.eu/items/external_data"
 EMBEDDED_FALLBACK_URL="https://error-pages-43f.pages.dev/404"
 
 # Bind a KV Namespace. Use KV as persistent storage for small key-value pairs.
@@ -60,4 +60,4 @@ mode = "smart"
 
 [env.staging]
 workers_dev = true
-vars = { DIRECTUS_API_LINKS_ENDPOINT="https://crm.mends.eu/items/links", DIRECTUS_API_EXTERNAL_LOGS_ENDPOINT="https://crm.mends.eu/items/external_logs", EMBEDDED_FALLBACK_URL="https://error-pages-43f.pages.dev/404"}
+vars = { DIRECTUS_API_LINKS_ENDPOINT="https://crm.mends.eu/items/links", DIRECTUS_API_EXTERNAL_DATA_ENDPOINT="https://crm.mends.eu/items/external_data", EMBEDDED_FALLBACK_URL="https://error-pages-43f.pages.dev/404"}

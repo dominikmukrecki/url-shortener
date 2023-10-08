@@ -42,23 +42,3 @@ export async function fetchOriginalURL(slug: string, env: Env): Promise<{ origin
         };
     }
 }
-
-// Logging function to send logs to Directus
-export async function logToDirectus(payload: any, env: Env) {
-    try {
-        const response = await fetch(env.DIRECTUS_API_EXTERNAL_LOGS_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                ...getAuthHeaders(env),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ payload: payload }) // Wrapping the payload in an object // body should look like: data.payload
-        });
-
-        if (!response.ok) {
-            console.error('Error logging data to Directus:', await response.text());
-        }
-    } catch (error) {
-        console.error('Error in logToDirectus:', error);
-    }
-}
