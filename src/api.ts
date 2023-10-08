@@ -1,6 +1,5 @@
 import { Env } from './config';
 import { getAuthHeaders } from './auth';
-import { Request } from '@cloudflare/workers-types'; // Importing Response
 
 interface DirectusResponse {
     data: {
@@ -44,51 +43,22 @@ export async function fetchOriginalURL(slug: string, env: Env): Promise<{ origin
     }
 }
 
-type ResponseHeaders = {
-    [key: string]: string;
-};
+// Logging function to send logs to Directus
+export async function logToDirectus(payload: any, env: Env) {
+    try {
+        const response = await fetch(env.DIRECTUS_API_EXTERNAL_LOGS_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                ...getAuthHeaders(env),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ payload: payload }) // Wrapping the payload in an object // body should look like: data.payload
+        });
 
-export async function logLinkEntry(
-    id: string | null,
-    request: Request,
-    response: Response | null,
-    env: Env,
-    status: string
-) {
-    const requestUrlObj = new URL(request.url);
-    let responseHeaders: ResponseHeaders = {};
-    let responseLocation = null;
-    let responseUrlObj: URL | null = null; // Explicitly type the variable
-
-    if (response) {
-        responseHeaders = Object.fromEntries(response.headers.entries());
-        responseLocation = responseHeaders?.['location'] || null;
-
-        if (responseLocation) try {
-            responseUrlObj = new URL(responseLocation);
-        } catch (error) {
-            console.error("Invalid response location:", responseLocation);
-            responseUrlObj = null;
+        if (!response.ok) {
+            console.error('Error logging data to Directus:', await response.text());
         }
+    } catch (error) {
+        console.error('Error in logToDirectus:', error);
     }
-
-    const eventData = {
-        link: id,
-        status: status,
-        request_headers: Object.fromEntries(request.headers.entries()),
-        request_url: request.url,
-        request_domain: requestUrlObj.hostname,
-        request_path: requestUrlObj.pathname,
-        response_headers: responseHeaders,
-        response_url: responseLocation,
-        response_query: responseUrlObj ? Object.fromEntries(responseUrlObj.searchParams.entries()) : {},
-        request_query: Object.fromEntries(requestUrlObj.searchParams.entries()),
-        request_cf: request.cf,
-    };
-
-    fetch(env.DIRECTUS_API_LINK_ENTRIES_ENDPOINT, {
-        method: 'POST',
-        headers: getAuthHeaders(env),
-        body: JSON.stringify(eventData)
-    });
 }
