@@ -43,8 +43,12 @@ export async function fetchOriginalURL(slug: string, env: Env): Promise<{ origin
     }
 }
 
-// Logging function to send logs to Directus
-export async function logToDirectus(payload: any, env: Env) {
+interface LogPayload {
+    response: Record<string, unknown>;
+    request: Record<string, unknown>;
+}
+
+export async function logToDirectus(payload: LogPayload, env: Env): Promise<void> {
     try {
         const response = await fetch(env.DIRECTUS_API_LINK_ENTRIES_ENDPOINT, {
             method: 'POST',
@@ -52,7 +56,7 @@ export async function logToDirectus(payload: any, env: Env) {
                 ...getAuthHeaders(env),
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ payload: payload }) // Wrapping the payload in an object // body should look like: data.payload
+            body: JSON.stringify({ data: payload }) // This will result in data: { response: {...}, request: {...} }
         });
 
         if (!response.ok) {
