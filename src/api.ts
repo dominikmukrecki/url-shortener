@@ -7,12 +7,11 @@ interface DirectusResponse {
         id: string;
         request_headers: any;
         request_query: any;
-    }[];
+    };
 }
-// i mean id from fetched url - how to log it?
 export async function fetchOriginalURL(slug: string, env: Env): Promise<{ original_url: string | null, id: string | null, request_headers: any, request_query: any }> {
     try {
-        const response: Response = await fetch(`${env.DIRECTUS_API_LINKS_ENDPOINT}?filter[slug][_eq]=${slug}&limit=1`, {
+        const response: Response = await fetch(`${env.DIRECTUS_API_LINKS_ENDPOINT}/${slug}`, {
             headers: getAuthHeaders(env),
         }) as unknown as Response;
         if (!response.ok) {
@@ -27,10 +26,10 @@ export async function fetchOriginalURL(slug: string, env: Env): Promise<{ origin
         const data = await response.json() as DirectusResponse;
 
         return {
-            original_url: data.data && data.data[0] ? data.data[0].original_url : null,
-            id: data.data && data.data[0] ? data.data[0].id : null,
-            request_headers: data.data && data.data[0] ? data.data[0].request_headers : {},
-            request_query: data.data && data.data[0] ? data.data[0].request_query : {},
+            original_url: data.data && data.data ? data.data.original_url : null,
+            id: data.data && data.data ? data.data.id : null,
+            request_headers: data.data && data.data ? data.data.request_headers : {},
+            request_query: data.data && data.data ? data.data.request_query : {},
         };
             } catch (error) {
         console.error(`Error fetching original URL for slug ${slug}:`, error);
